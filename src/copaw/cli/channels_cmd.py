@@ -21,6 +21,7 @@ from ..config.config import (
     IMessageChannelConfig,
     QQConfig,
     VoiceChannelConfig,
+    MattermostConfig,
 )
 from .utils import prompt_confirm, prompt_path, prompt_select
 from ..config import get_available_channels
@@ -48,6 +49,7 @@ _ALL_CHANNEL_NAMES = {
     "qq": "QQ",
     "console": "Console",
     "voice": "Twilio",
+    "mattermost": "Mattermost",
 }
 # Public alias for tests and external use.
 CHANNEL_NAMES = _ALL_CHANNEL_NAMES
@@ -601,6 +603,92 @@ def configure_console(current_config: ConsoleConfig) -> ConsoleConfig:
     return current_config
 
 
+def configure_mattermost(current_config: Any) -> Any:
+    """Configure Mattermost channel interactively."""
+    click.echo("\n=== Configure Mattermost Channel ===")
+
+    enabled = prompt_confirm(
+        "Enable Mattermost channel?",
+        default=getattr(current_config, "enabled", False),
+    )
+
+    if not enabled:
+        if hasattr(current_config, "enabled"):
+            current_config.enabled = False
+        else:
+            current_config["enabled"] = False
+        return current_config
+
+    if hasattr(current_config, "enabled"):
+        current_config.enabled = True
+    else:
+        current_config["enabled"] = True
+
+    bot_prefix = click.prompt(
+        "Bot prefix (e.g., @bot)",
+        default=getattr(current_config, "bot_prefix", "") or "[BOT]",
+        type=str,
+    )
+    if hasattr(current_config, "bot_prefix"):
+        current_config.bot_prefix = bot_prefix
+    else:
+        current_config["bot_prefix"] = bot_prefix
+
+    mattermost_url = click.prompt(
+        "Mattermost server URL (e.g., http://localhost:8065)",
+        default=getattr(current_config, "mattermost_url", ""),
+        type=str,
+    )
+    if hasattr(current_config, "mattermost_url"):
+        current_config.mattermost_url = mattermost_url
+    else:
+        current_config["mattermost_url"] = mattermost_url
+
+    bot_token = click.prompt(
+        "Mattermost Bot Token",
+        default=getattr(current_config, "bot_token", ""),
+        hide_input=True,
+        type=str,
+    )
+    if hasattr(current_config, "bot_token"):
+        current_config.bot_token = bot_token
+    else:
+        current_config["bot_token"] = bot_token
+
+    team_id = click.prompt(
+        "Mattermost Team ID",
+        default=getattr(current_config, "team_id", ""),
+        type=str,
+    )
+    if hasattr(current_config, "team_id"):
+        current_config.team_id = team_id
+    else:
+        current_config["team_id"] = team_id
+
+    use_proxy = prompt_confirm(
+        "Use HTTP proxy?",
+        default=bool(getattr(current_config, "http_proxy", "")),
+    )
+
+    if use_proxy:
+        http_proxy = click.prompt(
+            "HTTP proxy address (e.g., http://127.0.0.1:7890)",
+            default=getattr(current_config, "http_proxy", ""),
+            type=str,
+        )
+        if hasattr(current_config, "http_proxy"):
+            current_config.http_proxy = http_proxy
+        else:
+            current_config["http_proxy"] = http_proxy
+    else:
+        if hasattr(current_config, "http_proxy"):
+            current_config.http_proxy = ""
+        else:
+            current_config["http_proxy"] = ""
+
+    return current_config
+
+
 # ── reusable channel configuration flow (used by init_cmd too) ─────
 
 # Full registry — filtered at runtime by get_channel_configurators().
@@ -613,6 +701,7 @@ _ALL_CHANNEL_CONFIGURATORS = {
     "qq": ("QQ", configure_qq),
     "console": ("Console", configure_console),
     "voice": ("Twilio", configure_voice),
+    "mattermost": ("Mattermost", configure_mattermost),
 }
 
 

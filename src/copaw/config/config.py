@@ -108,6 +108,22 @@ class VoiceChannelConfig(BaseChannelConfig):
     welcome_greeting: str = "Hi! This is CoPaw. How can I help you?"
 
 
+class MattermostConfig(BaseChannelConfig):
+    """Mattermost channel: mattermost_url, bot_token, team_id."""
+
+    mattermost_url: str = ""
+    bot_token: str = ""
+    team_id: str = ""
+    http_proxy: str = ""
+    # When enabled, only process channel posts that explicitly mention the bot.
+    # DMs / group DMs can be exempted via allow_dm_without_mention.
+    require_mention_in_channels: bool = True
+    allow_dm_without_mention: bool = True
+    # Optional command prefixes that can trigger processing without @ mention.
+    # Example: ["!copaw", "/copaw"]
+    command_prefixes: List[str] = Field(default_factory=list)
+
+
 class ChannelConfig(BaseModel):
     """Built-in channel configs; extra keys allowed for plugin channels."""
 
@@ -121,6 +137,7 @@ class ChannelConfig(BaseModel):
     telegram: TelegramConfig = TelegramConfig()
     console: ConsoleConfig = ConsoleConfig()
     voice: VoiceChannelConfig = VoiceChannelConfig()
+    mattermost: MattermostConfig = MattermostConfig()
 
 
 class LastApiConfig(BaseModel):
@@ -311,4 +328,5 @@ ChannelConfigUnion = Union[
     TelegramConfig,
     ConsoleConfig,
     VoiceChannelConfig,
+    MattermostConfig,
 ]
